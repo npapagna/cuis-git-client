@@ -1,6 +1,8 @@
-'From Cuis7.3 [latest update: #7062] on 5 March 2025 at 2:04:34 pm'!
+'From Cuis7.3 [latest update: #7062] on 5 March 2025 at 2:06:46 pm'!
 'Description Refactors'!
-!provides: 'GitClient' 1 2!
+!provides: 'GitClient' 1 3!
+!requires: 'CommandShell' 1 2 nil!
+!requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
 SystemOrganization addCategory: #'GitClient-UI'!
 SystemOrganization addCategory: #GitClient!
