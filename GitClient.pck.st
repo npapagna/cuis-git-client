@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7062] on 8 March 2025 at 2:28:05 am'!
+'From Cuis7.3 [latest update: #7062] on 10 March 2025 at 1:37:51 pm'!
 'Description Refactors'!
-!provides: 'GitClient' 1 6!
+!provides: 'GitClient' 1 7!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
@@ -277,6 +277,17 @@ contentsOfFile: aFilePath at: aCommitHash
 		outputOfGitCommand: 'show ', aCommitHash,':./', file name
 		on: file parent asString! !
 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:36:16'!
+contentsOfFile: aFilePath onBranch: aBranchName 
+	
+	| fileName repositoryRoot |
+	repositoryRoot:= self repositoryRootFor: aFilePath.
+	fileName := aFilePath withoutPrefix: repositoryRoot asString.
+	
+	^ self
+		outputOfGitCommand:  'show ', aBranchName, ':.', fileName
+		on: repositoryRoot asString! !
+
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:35:51'!
 fileLog: aFilePath
 
@@ -290,12 +301,55 @@ outputOfGitCommand: aCommand on: aDirectoryPath
 
 	^ OSProcess outputOf: 'git -C ', aDirectoryPath ,' ', aCommand! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/5/2025 13:42:44'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:07:07'!
 outputOfGitLogCommandForFile: aFilePath
 
 	^ self
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
 		on: aFilePath asFileEntry parent pathName! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:29:55'!
+outputOfGitLogCommandForFile: aFilePath onBranchNamed: branchName 
+
+	| fileName fileNameInBranch currentFolder |
+	currentFolder:= aFilePath asFileEntry.
+	[
+		currentFolder := currentFolder parent.
+		(currentFolder directoryMatching: '.git') isNil ] whileTrue: [
+		(DirectoryEntry roots includes: currentFolder) ifTrue: [ self halt ]
+	].
+
+	fileName := aFilePath withoutPrefix: currentFolder asString.
+	
+	fileNameInBranch := branchName
+		ifEmpty: [ ':.', fileName ]
+		ifNotEmpty: [branchName,':.', fileName ].
+	
+	
+	^ self
+		outputOfGitCommand:  'show ', fileNameInBranch
+		on: currentFolder asString! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 10:51:31'!
+remoteBranchesIncludingFile: aFilePath 
+
+	^ ((self outputOfGitCommand: 'branch -r' on: aFilePath asFileEntry parent asString) lines
+	   collect: [ :l | l withoutLeadingBlanks withoutTrailingBlanks ])
+	select: [ :l | l isEmpty not]! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:35:51'!
+repositoryRootFor: aFilePath
+	
+	| repositoryRoot |
+	repositoryRoot:= aFilePath asFileEntry.
+	
+	[
+		repositoryRoot := repositoryRoot parent.
+		(repositoryRoot directoryMatching: '.git') isNil ] whileTrue: [
+		(DirectoryEntry roots includes: repositoryRoot) ifTrue: [ self halt ]
+	].
+	
+	^ repositoryRoot! !
 
 !GitCodePackageFileHistory methodsFor: 'code package files' stamp: 'NPM 3/8/2025 02:22:24'!
 codePackageFileFrom: aGitCommit 
@@ -507,13 +561,15 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:41:08'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 10:39:43'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
 	"
 	^#(
 		#(0	'Git history' 	nil 	model 	gitHistoryOfSelectedPackage 						packageIcon)
+		#(1	'Compare with branch...' 	nil 	model 	compareSelectedPackageWithGitBranch 						packageIcon)
+		#(3 	'-----')
 	)! !
 
 !GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
@@ -689,17 +745,37 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/10/2025 13:33:02'!
+compareSelectedPackageWithGitBranch
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient |
+			gitClient := GitClient new.
+			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			
+			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to compare to'.
+		
+			selectedBranchIndex > 0 ifTrue: [ | branch packageFileContentsInSelectedBranch packageFile |
+				branch := remoteBranches at: selectedBranchIndex.
+				packageFileContentsInSelectedBranch := gitClient contentsOfFile: codePackage fullFileName onBranch: branch.
+				packageFile := CodePackageFile at:codePackage fullFileName  contents: packageFileContentsInSelectedBranch readStream.
+				(CodeFileBrowser browseCodeSource: packageFile)
+					removeUpToDate
+			]
+	 ]! !
+
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 14:23:59'!
 gitHistoryOfSelectedMethod
 	
 	GitHistoryWindow openCompiledMethod: self currentCompiledMethod! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 14:02:10'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/10/2025 10:41:28'!
 gitHistoryOfSelectedPackage
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
-		ifNotNil: [ :packageFileName | GitHistoryWindow openCodePackage: self selectedPackage ]
+		ifNotNil: [ :codePackage | GitHistoryWindow openCodePackage: self selectedPackage ]
 ! !
 
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 13:44:27'!
