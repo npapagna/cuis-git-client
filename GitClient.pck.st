@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7062] on 5 March 2025 at 2:06:46 pm'!
+'From Cuis7.3 [latest update: #7062] on 8 March 2025 at 2:28:05 am'!
 'Description Refactors'!
-!provides: 'GitClient' 1 3!
+!provides: 'GitClient' 1 6!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
@@ -8,39 +8,9 @@ SystemOrganization addCategory: #'GitClient-UI'!
 SystemOrganization addCategory: #GitClient!
 
 
-!classDefinition: #GitCodePackageFile category: #GitClient!
-Object subclass: #GitCodePackageFile
-	instanceVariableNames: 'commit codePackage'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'GitClient'!
-!classDefinition: 'GitCodePackageFile class' category: #GitClient!
-GitCodePackageFile class
-	instanceVariableNames: ''!
-
-!classDefinition: #GitCodePackageFile2 category: #GitClient!
-Object subclass: #GitCodePackageFile2
-	instanceVariableNames: 'codePackagePath commit codePackage'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'GitClient'!
-!classDefinition: 'GitCodePackageFile2 class' category: #GitClient!
-GitCodePackageFile2 class
-	instanceVariableNames: ''!
-
-!classDefinition: #GitCodePackageFileHistory category: #GitClient!
-Object subclass: #GitCodePackageFileHistory
-	instanceVariableNames: 'codepackages'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'GitClient'!
-!classDefinition: 'GitCodePackageFileHistory class' category: #GitClient!
-GitCodePackageFileHistory class
-	instanceVariableNames: ''!
-
 !classDefinition: #GitCompiledMethodHistory category: #GitClient!
 Object subclass: #GitCompiledMethodHistory
-	instanceVariableNames: 'compiledMethod gitCodePackages'
+	instanceVariableNames: 'compiledMethod gitCodePackageFileHistory'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient'!
@@ -48,34 +18,24 @@ Object subclass: #GitCompiledMethodHistory
 GitCompiledMethodHistory class
 	instanceVariableNames: ''!
 
-!classDefinition: #GitPackage category: #GitClient!
-Object subclass: #GitPackage
-	instanceVariableNames: ''
+!classDefinition: #GitUncommitedCodePackage category: #GitClient!
+Object subclass: #GitUncommitedCodePackage
+	instanceVariableNames: 'codePackage'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient'!
-!classDefinition: 'GitPackage class' category: #GitClient!
-GitPackage class
-	instanceVariableNames: 'packageFilePath'!
-
-!classDefinition: #GitSourceCodeModel category: #GitClient!
-Object subclass: #GitSourceCodeModel
-	instanceVariableNames: 'selectedCommitIndex sourceCodeHistory'
-	classVariableNames: ''
-	poolDictionaries: ''
-	category: 'GitClient'!
-!classDefinition: 'GitSourceCodeModel class' category: #GitClient!
-GitSourceCodeModel class
+!classDefinition: 'GitUncommitedCodePackage class' category: #GitClient!
+GitUncommitedCodePackage class
 	instanceVariableNames: ''!
 
-!classDefinition: #FileLogModel category: #'GitClient-Model'!
-Object subclass: #FileLogModel
-	instanceVariableNames: 'filePath commits selectedIndex'
+!classDefinition: #GitUncommitedCompiledMethod category: #GitClient!
+Object subclass: #GitUncommitedCompiledMethod
+	instanceVariableNames: 'compiledMethod'
 	classVariableNames: ''
 	poolDictionaries: ''
-	category: 'GitClient-Model'!
-!classDefinition: 'FileLogModel class' category: #'GitClient-Model'!
-FileLogModel class
+	category: 'GitClient'!
+!classDefinition: 'GitUncommitedCompiledMethod class' category: #GitClient!
+GitUncommitedCompiledMethod class
 	instanceVariableNames: ''!
 
 !classDefinition: #GitClient category: #'GitClient-Model'!
@@ -86,6 +46,16 @@ Object subclass: #GitClient
 	category: 'GitClient-Model'!
 !classDefinition: 'GitClient class' category: #'GitClient-Model'!
 GitClient class
+	instanceVariableNames: ''!
+
+!classDefinition: #GitCodePackageFileHistory category: #'GitClient-Model'!
+Object subclass: #GitCodePackageFileHistory
+	instanceVariableNames: 'codePackage commits codePackagesByCommitHash'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'GitClient-Model'!
+!classDefinition: 'GitCodePackageFileHistory class' category: #'GitClient-Model'!
+GitCodePackageFileHistory class
 	instanceVariableNames: ''!
 
 !classDefinition: #GitCommit category: #'GitClient-Model'!
@@ -118,346 +88,184 @@ Object subclass: #GitClientMenus
 GitClientMenus class
 	instanceVariableNames: ''!
 
-!classDefinition: #GitLogWindow category: #'GitClient-UI'!
-SystemWindow subclass: #GitLogWindow
+!classDefinition: #GitHistoryModel category: #'GitClient-UI'!
+Object subclass: #GitHistoryModel
+	instanceVariableNames: 'gitHistory selectedCommitIndex'
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'GitClient-UI'!
+!classDefinition: 'GitHistoryModel class' category: #'GitClient-UI'!
+GitHistoryModel class
+	instanceVariableNames: ''!
+
+!classDefinition: #GitCodePackageFileHistoryModel category: #'GitClient-UI'!
+GitHistoryModel subclass: #GitCodePackageFileHistoryModel
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient-UI'!
-!classDefinition: 'GitLogWindow class' category: #'GitClient-UI'!
-GitLogWindow class
+!classDefinition: 'GitCodePackageFileHistoryModel class' category: #'GitClient-UI'!
+GitCodePackageFileHistoryModel class
 	instanceVariableNames: ''!
 
-!classDefinition: #GitSourceCodeWindow category: #'GitClient-UI'!
-SystemWindow subclass: #GitSourceCodeWindow
+!classDefinition: #GitCompiledMethodHistoryModel category: #'GitClient-UI'!
+GitHistoryModel subclass: #GitCompiledMethodHistoryModel
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient-UI'!
-!classDefinition: 'GitSourceCodeWindow class' category: #'GitClient-UI'!
-GitSourceCodeWindow class
+!classDefinition: 'GitCompiledMethodHistoryModel class' category: #'GitClient-UI'!
+GitCompiledMethodHistoryModel class
 	instanceVariableNames: ''!
 
-!classDefinition: #GitCodePackageListWindow category: #'GitClient-UI'!
-CodePackageListWindow subclass: #GitCodePackageListWindow
+!classDefinition: #GitHistoryWindow category: #'GitClient-UI'!
+SystemWindow subclass: #GitHistoryWindow
 	instanceVariableNames: ''
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient-UI'!
-!classDefinition: 'GitCodePackageListWindow class' category: #'GitClient-UI'!
-GitCodePackageListWindow class
+!classDefinition: 'GitHistoryWindow class' category: #'GitClient-UI'!
+GitHistoryWindow class
+	instanceVariableNames: ''!
+
+!classDefinition: #GitCodePackageHistoryWindow category: #'GitClient-UI'!
+GitHistoryWindow subclass: #GitCodePackageHistoryWindow
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'GitClient-UI'!
+!classDefinition: 'GitCodePackageHistoryWindow class' category: #'GitClient-UI'!
+GitCodePackageHistoryWindow class
+	instanceVariableNames: ''!
+
+!classDefinition: #GitCompiledMethodHistoryWindow category: #'GitClient-UI'!
+GitHistoryWindow subclass: #GitCompiledMethodHistoryWindow
+	instanceVariableNames: ''
+	classVariableNames: ''
+	poolDictionaries: ''
+	category: 'GitClient-UI'!
+!classDefinition: 'GitCompiledMethodHistoryWindow class' category: #'GitClient-UI'!
+GitCompiledMethodHistoryWindow class
 	instanceVariableNames: ''!
 
 
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:28:59'!
-author
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:31:50'!
+collectCommits: aBlock
 	
-	^ commit author! !
+	^ self commits collect: aBlock! !
 
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 10:15:12'!
-commit
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:26:24'!
+commits
 	
-	^commit! !
+	^ gitCodePackageFileHistory
+		commitsIncluding: compiledMethod selector
+		inClassNamed: compiledMethod methodClass name! !
 
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:27:35'!
-commit: aGitCommit package: aCodePackageFile 
-	
-	commit := aGitCommit.
-	codePackage := aCodePackageFile! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:28:50'!
-commitHash
-	
-	^ commit commitHash ! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:29:19'!
-date
-	
-	^ commit date! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:28:05'!
-includesSelector: aSymbol in: aSymbol2 
-	
-	^ (codePackage classNamed: aSymbol2)
-		includesSelector: aSymbol! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:06:50'!
-includesUpToDateSelector: aSymbol in: aSymbol2 
-	
-	^ codePackage includesUpToDateSelector: aSymbol in: aSymbol2! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:29:28'!
-message
-	
-	^ commit message! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 08:59:32'!
-removeUpToDateMethods
-	
-	codePackage classes do: [ :aPseudoClass |
-		aPseudoClass removeUpToDateMethods.
-		aPseudoClass theMetaClass removeUpToDateMethods ]! !
-
-!GitCodePackageFile methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 02:32:11'!
-sourceCodeOf: aSymbol in: aSymbol2 
-	
-	^ (codePackage classNamed: aSymbol2)
-		sourceCodeAt: aSymbol ! !
-
-!GitCodePackageFile class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 08:55:34'!
-cm: cc at: filePath 
-	
-	| cp |
-	cp := CodePackageFile
-		at: filePath
-		contents: (cc contentsOfFile: filePath) readStream.
-		
-		
-		"cp classes do: [ :aPseudoClass |
-		aPseudoClass removeUpToDateMethods.
-		aPseudoClass theMetaClass removeUpToDateMethods ]."
-	
-	^ self new commit: cc package: cp! !
-
-!GitCodePackageFile2 methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:41:16'!
-codePackage
-	
-	^ codePackage ifNil: [
-		codePackage := CodePackageFile
-			at: codePackagePath
-			contents: (commit contentsOfFile: codePackagePath) readStream 
-		]! !
-
-!GitCodePackageFile2 methodsFor: 'as yet unclassified' stamp: 'NPM 3/5/2025 14:02:06'!
-commit
-	
-	^ commit! !
-
-!GitCodePackageFile2 methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:39:20'!
-initializeAt: aFilePath commit: aCommit 
-	
-	codePackagePath := aFilePath.
-	commit := aCommit! !
-
-!GitCodePackageFile2 class methodsFor: 'instance creation' stamp: 'NPM 3/4/2025 12:38:49'!
-at: aFilePath commit: aCommit 
-	
-	^ self new
-		initializeAt: aFilePath
-		commit: aCommit! !
-
-!GitCodePackageFileHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:42:09'!
-findIndexOfCurrentVersionOfSelection: aSelector inClassNamed: aClassName in: codePackages
-
-	^ codePackages findLast: [ :codePackageCommit | codePackageCommit codePackage includesUpToDateSelector: aSelector in: aClassName ]! !
-
-!GitCodePackageFileHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 10:10:39'!
-historyOfCompiledMethod: aCompiledMethod 
-	
-	^ GitCompiledMethodHistory for: aCompiledMethod withAll: (
-		self historyOfSelector: aCompiledMethod selector inClassNamed: aCompiledMethod methodClass name
-	)! !
-
-!GitCodePackageFileHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 10:08:35'!
-historyOfSelector: aSelector inClassNamed: aClassName 
-	
-	| codePackages currentVersionIndex |
-	codePackages := self
-		packagesIncluding: aSelector
-		inClassNamed: aClassName.
-	
-	currentVersionIndex := self
-		findIndexOfCurrentVersionOfSelection: aSelector
-		inClassNamed: aClassName
-		in: codePackages.
-	
-	^ codePackages
-		copyFrom: currentVersionIndex
-		to: codePackages size
-	
-	! !
-
-!GitCodePackageFileHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:38:45'!
-initializeWithAll: anOrderedCollection 
-	
-	codepackages := anOrderedCollection! !
-
-!GitCodePackageFileHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:40:00'!
-packagesIncluding: aSelector inClassNamed: aClassName
-
-	^ codepackages select: [ :codePackageCommit | codePackageCommit codePackage includesSelector: aSelector in: aClassName ] ! !
-
-!GitCodePackageFileHistory class methodsFor: 'error handling' stamp: 'NPM 3/4/2025 12:39:36'!
-at: aCodePackageFilePath
-
-	| commits |
-	commits := (GitClient new fileLog: aCodePackageFilePath) collect: [ :commit | GitCodePackageFile2 at: aCodePackageFilePath commit: commit ].
-		
-	
-	^ self new initializeWithAll:  commits! !
-
-!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/5/2025 14:01:43'!
-collectCommits: aBlock 
-	
-	^ gitCodePackages collect: [ :gcp  | aBlock value: gcp commit  ]! !
-
-!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 11:59:33'!
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:27:53'!
 compareLatestVersionWithCommitAt: anIndex 
 	
 	^ DifferenceFinder
-				displayPatchFrom: self latestSourceCodeVersion
-				to: (self sourceCodeFromCommitAt: anIndex)
-				tryWords: true
-				prettyPrintedIn: compiledMethod methodClass! !
+		displayPatchFrom: self latestSourceCodeVersion
+		to: (self sourceCodeFromCommitAt: anIndex)
+		tryWords: true
+		prettyPrintedIn: compiledMethod methodClass! !
 
-!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 10:12:43'!
-for: aCompiledMethod withAll: aCollectionOfGitCodePackages 
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:20:33'!
+initializeFor: aCompiledMethod using: aGitCodePackageFileHistory 
 	
 	compiledMethod := aCompiledMethod.
-	gitCodePackages := aCollectionOfGitCodePackages! !
+	gitCodePackageFileHistory := aGitCodePackageFileHistory.! !
 
-!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 11:56:30'!
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:32:09'!
 latestSourceCodeVersion
 	
 	^ compiledMethod sourceCode! !
 
-!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/5/2025 14:03:50'!
-sourceCodeFromCommitAt: anIndex
+!GitCompiledMethodHistory methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:26:43'!
+sourceCodeFromCommitAt: anIndex 
+	
+	^ gitCodePackageFileHistory
+		sourceCodeOf: compiledMethod selector
+		inClassNamed: compiledMethod methodClass name
+		fromCommitAt: anIndex! !
 
-	^ (gitCodePackages at: anIndex) codePackage sourceCodeOf: compiledMethod selector in: compiledMethod methodClass name! !
-
-!GitCompiledMethodHistory class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:42:27'!
-for: aSymbol2 withAll: anOrderedCollection 
+!GitCompiledMethodHistory class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:20:00'!
+for: aCompiledMethod using: aGitCodePackageFileHistory 
 	
 	^ self new
-		for: aSymbol2 withAll: anOrderedCollection ! !
+		initializeFor: aCompiledMethod
+		using: aGitCodePackageFileHistory ! !
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:29:56'!
-changesTo: aSelector in: aClassName 
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:32:49'!
+author
 	
-	| cm |
-	cm := self codePackages.
-	! !
+	^ 'N/A'! !
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:30:03'!
-codePackages
-	self shouldBeImplemented.! !
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:39:40'!
+codePackageFileAt: aCodePackageFilePath
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:29:17'!
-commits
+	codePackage fullFileName = aCodePackageFilePath
+		ifTrue: [ ^ codePackage codePackageFile ].
+		
+	self notYetImplemented! !
+
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:32:39'!
+commitHash
 	
-	^ GitClient new fileLog: packageFilePath.! !
+	^ 'uncommited'! !
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:26:19'!
-fromPackageNamed: aPackageName 
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:33:02'!
+date
 	
-	^ self open: (CodePackage installedPackages at: aPackageName) fullFileName! !
+	^ 'N/A'! !
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:26:54'!
-initializeAt: aPackageFilePath 
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:32:26'!
+initializeWith: aCodePackage 
 	
-	packageFilePath := aPackageFilePath! !
+	codePackage := aCodePackage! !
 
-!GitPackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 09:26:40'!
-open: aPackageFilePath 
+!GitUncommitedCodePackage methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:33:12'!
+message
 	
-	^ self initializeAt: aPackageFilePath! !
+	^ 'N/A'! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:04:58'!
-commits
+!GitUncommitedCodePackage class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:32:10'!
+with: aCodePackage 
 	
-	^ sourceCodeHistory collectCommits: [ :commit |
-		commit commitHash, ' ', commit author, ' ', commit date, ' ', commit message ]! !
+	^ self
+		new
+		initializeWith: aCodePackage! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:05:02'!
-initializeSourceCodeHistory: aSourceCodeHistory 
+!GitUncommitedCompiledMethod methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:51:05'!
+author
 	
-	sourceCodeHistory := aSourceCodeHistory! !
+	^ compiledMethod author! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:01:50'!
-selectCommitAt: anIndex
-
-	selectedCommitIndex := anIndex.
+!GitUncommitedCompiledMethod methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:50:26'!
+commitHash
 	
-	self changed: #sourceCode! !
+	^ 'uncommited'! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:04:58'!
-selectedCommit
+!GitUncommitedCompiledMethod methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:51:36'!
+date
 	
-	^ sourceCodeHistory at: selectedCommitIndex! !
+	^ compiledMethod dateMethodLastSaved asString ! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:00:24'!
-selectedCommitIndex
+!GitUncommitedCompiledMethod methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:50:15'!
+initializeFor: aCompiledMethod 
 	
-	^ selectedCommitIndex ifNil: [ selectedCommitIndex := 0 ]! !
+	compiledMethod := aCompiledMethod ! !
 
-!GitSourceCodeModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:04:58'!
-sourceCode
+!GitUncommitedCompiledMethod methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:51:50'!
+message
 	
-	selectedCommitIndex = 0 ifTrue: [ ^ sourceCodeHistory latestSourceCodeVersion ].
-	
+	^ 'no commit message'! !
 
-	^ sourceCodeHistory compareLatestVersionWithCommitAt: selectedCommitIndex
-	
-	! !
-
-!GitSourceCodeModel class methodsFor: 'instance creation' stamp: 'NPM 3/4/2025 12:12:51'!
-forCompiledMethod: aCompiledMethod 
-	
-	^ self sourceCodeHistory: aCompiledMethod gitHistory! !
-
-!GitSourceCodeModel class methodsFor: 'instance creation' stamp: 'NPM 3/4/2025 12:05:50'!
-sourceCodeHistory: aSourceCodeHistory 
+!GitUncommitedCompiledMethod class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:50:05'!
+for: aCompiledMethod 
 	
 	^ self new
-		initializeSourceCodeHistory: aSourceCodeHistory! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:39:02'!
-commits
-	
-	^ commits collect: [ :commit | commit commitHash, ' ', commit author, ' ', commit date, ' ', commit message ]! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:47:08'!
-compareWithSelectedVersion
-
-	| codePackage |
-	
-	codePackage := CodePackageFile
-		at: filePath
-		contents: (self selectedCommit contentsOfFile: filePath) readStream.
-	
-	(CodeFileBrowser browseCodeSource: codePackage)
-		removeUpToDate! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:36:56'!
-initializeFor: aFilePath log: aCollectionOfGitCommits
-	
-	filePath := aFilePath.
-	commits := aCollectionOfGitCommits.! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:39:32'!
-selectedCommit
-	
-	^ commits at: selectedIndex! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 2/28/2025 02:16:58'!
-selectedIndex
-	
-	^ selectedIndex ifNil: [ selectedIndex := 0 ]! !
-
-!FileLogModel methodsFor: 'as yet unclassified' stamp: 'NPM 2/28/2025 13:42:16'!
-selectedIndex: anIndex 
-	
-	selectedIndex := anIndex.
-	
-	anIndex > 0 ifTrue: [ self compareWithSelectedVersion ]! !
-
-!FileLogModel class methodsFor: 'instance creation' stamp: 'NPM 3/3/2025 01:38:03'!
-for: aFilePath log: aCollectionOfCommits
-
-	^ self new
-		initializeFor: aFilePath
-		log: aCollectionOfCommits! !
+		initializeFor: aCompiledMethod! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:32:20'!
 contentsOfFile: aFilePath at: aCommitHash 
@@ -489,6 +297,63 @@ outputOfGitLogCommandForFile: aFilePath
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
 		on: aFilePath asFileEntry parent pathName! !
 
+!GitCodePackageFileHistory methodsFor: 'code package files' stamp: 'NPM 3/8/2025 02:22:24'!
+codePackageFileFrom: aGitCommit 
+	
+	^ codePackagesByCommitHash
+		at: aGitCommit commitHash
+		ifAbsentPut: [ self loadCodePackageFileFrom: aGitCommit ]! !
+
+!GitCodePackageFileHistory methodsFor: 'code package files' stamp: 'NPM 3/8/2025 02:22:31'!
+codePackageFileFromCommitAt: anIndex
+
+	^ self codePackageFileFrom: (commits at: anIndex)! !
+
+!GitCodePackageFileHistory methodsFor: 'code package files' stamp: 'NPM 3/8/2025 02:18:34'!
+loadCodePackageFileFrom: aGitCommit
+
+	^ CodePackageFile
+		at: codePackage fullFileName
+		contents: (aGitCommit contentsOfFile: codePackage fullFileName) readStream! !
+
+!GitCodePackageFileHistory methodsFor: 'commits' stamp: 'NPM 3/7/2025 14:05:28'!
+collectCommits: aBlock
+
+	^ commits collect: aBlock! !
+
+!GitCodePackageFileHistory methodsFor: 'commits' stamp: 'NPM 3/8/2025 02:22:50'!
+commitsIncluding: aSelector inClassNamed: aClassName 
+	
+	^  commits select: [ :commit | (self codePackageFileFrom: commit) includesSelector: aSelector inClassNamed: aClassName ] 
+	
+	! !
+
+!GitCodePackageFileHistory methodsFor: 'history' stamp: 'NPM 3/7/2025 13:34:42'!
+historyOfCompiledMethod: aCompiledMethod 
+	
+	^ GitCompiledMethodHistory for: aCompiledMethod using: self! !
+
+!GitCodePackageFileHistory methodsFor: 'initialization' stamp: 'NPM 3/8/2025 02:05:03'!
+initializeAt: aCodePackage withAll: aCollectionOfCommits 
+	
+	codePackage := aCodePackage.
+	commits := aCollectionOfCommits.
+	
+	codePackagesByCommitHash := Dictionary new! !
+
+!GitCodePackageFileHistory methodsFor: 'source code' stamp: 'NPM 3/8/2025 02:22:31'!
+sourceCodeOf: aSelector inClassNamed: aClassName fromCommitAt: anIndex 
+	
+	^ (self codePackageFileFromCommitAt: anIndex)
+		sourceCodeOf: aSelector in: aClassName! !
+
+!GitCodePackageFileHistory class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:28:43'!
+for: aCodePackage 
+	
+	^ self new
+		initializeAt: aCodePackage
+		withAll:  (GitClient new fileLog: aCodePackage fullFileName)! !
+
 !GitCommit methodsFor: 'accessing' stamp: 'NPM 2/28/2025 13:14:25'!
 author
 	
@@ -509,23 +374,20 @@ message
 	 
 	^ message! !
 
-!GitCommit methodsFor: 'initialization' stamp: 'NPM 3/2/2025 10:56:13'!
+!GitCommit methodsFor: 'initialization' stamp: 'NPM 3/8/2025 02:02:10'!
 initializeCommitHash: aCommitHash author: anAuthor date: aDate message: aMessage with: aGitClient 
 	
 	commitHash := aCommitHash.
 	author := anAuthor.
 	date := aDate.
 	message := aMessage.
+	
 	gitClient := aGitClient! !
 
-!GitCommit methodsFor: 'reading' stamp: 'NPM 3/3/2025 01:30:44'!
+!GitCommit methodsFor: 'reading' stamp: 'NPM 3/8/2025 02:02:00'!
 contentsOfFile: aFilePath 
 
-	^ gitClient contentsOfFile: aFilePath at: self commitHash! !
-
-!GitCommit methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:28:25'!
-codePackage
-	self shouldBeImplemented.! !
+	^ gitClient contentsOfFile: aFilePath at: commitHash! !
 
 !GitCommit class methodsFor: 'instance creation' stamp: 'NPM 3/3/2025 01:28:15'!
 commitHash: aCommitHash author: anAuthor date: aDate message: aMessage with: aGitClient 
@@ -625,104 +487,201 @@ parseAllIn: aReadStream for: aGitClient
 	
 	^ (self on: aReadStream for: aGitClient) parseCommits! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:51:29'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:39:07'!
 initialize
 
-	BrowserWindow at: #messageListMenuSpec registerMenuAndShortcutsSpecProvider:
-		(MessageSend receiver: self selector: #messageListMenuSpec).! !
+	"
+	self initialize
+	"
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:52:28'!
+	BrowserWindow at: #messageListMenuSpec registerMenuAndShortcutsSpecProvider:
+		(MessageSend receiver: self selector: #messageListMenuSpec).
+	
+	BrowserWindow at: #systemCatListMenuSpec registerMenuAndShortcutsSpecProvider:
+		(MessageSend receiver: self selector: #systemCatListMenuSpec).! !
+
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:40:02'!
 messageListMenuSpec
 	
 	^#(
-		#(75		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									weatherFewCloudsIcon)
+		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitLogWindow methodsFor: 'as yet unclassified' stamp: 'NPM 2/28/2025 09:02:11'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 13:41:08'!
+systemCatListMenuSpec
+	"Spec for the menu and shortcut keys for the system categories list.
+	See coment at Morph >> #getMenu
+	"
+	^#(
+		#(0	'Git history' 	nil 	model 	gitHistoryOfSelectedPackage 						packageIcon)
+	)! !
+
+!GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
+commits
+	
+	^ gitHistory collectCommits: [ :commit | commit commitHash, ' ', commit author, ' ', commit date, ' ', commit message ]! !
+
+!GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:34:14'!
+initializeFor: aGitHistory 
+	
+	gitHistory := aGitHistory! !
+
+!GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:37:16'!
+notifySelectedCommitIndexChanged
+
+	^ self changed: #selectedCommitIndex! !
+
+!GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:37:16'!
+selectCommitAt: anIndex
+
+	selectedCommitIndex := anIndex.
+
+	self notifySelectedCommitIndexChanged! !
+
+!GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:34:02'!
+selectedCommitIndex
+	
+	^ selectedCommitIndex ifNil: [ selectedCommitIndex := 0 ]! !
+
+!GitHistoryModel class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:40:52'!
+fromCodePackage: aCodePackage 
+	
+	^ GitCodePackageFileHistoryModel fromCodePackage: aCodePackage ! !
+
+!GitHistoryModel class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:47:09'!
+fromCompiledMethod: aCompiledMethod 
+	
+	^ GitCompiledMethodHistoryModel fromCompiledMethod: aCompiledMethod ! !
+
+!GitCodePackageFileHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:23:29'!
+selectedCodePackage
+	
+	^ gitHistory codePackageFileFromCommitAt: selectedCommitIndex! !
+
+!GitCodePackageFileHistoryModel class methodsFor: 'instance creation' stamp: 'NPM 3/7/2025 14:30:37'!
+for: aGitCodePackageFileHistory 
+	
+	^ self new
+		initializeFor: aGitCodePackageFileHistory! !
+
+!GitCodePackageFileHistoryModel class methodsFor: 'instance creation' stamp: 'NPM 3/8/2025 01:26:34'!
+fromCodePackage: aCodePackage 
+	
+	^ self for: aCodePackage gitHistory! !
+
+!GitCompiledMethodHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:37:33'!
+notifySelectedCommitIndexChanged
+
+	super notifySelectedCommitIndexChanged.
+	
+	self notifySourceCodeChanged.! !
+
+!GitCompiledMethodHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:38:07'!
+notifySourceCodeChanged
+	
+	self changed: #sourceCode! !
+
+!GitCompiledMethodHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:35:41'!
+sourceCode
+	
+	selectedCommitIndex = 0 ifTrue: [ ^ gitHistory latestSourceCodeVersion ].
+	
+
+	^ gitHistory compareLatestVersionWithCommitAt: selectedCommitIndex
+	
+	! !
+
+!GitCompiledMethodHistoryModel class methodsFor: 'instance creation' stamp: 'NPM 3/7/2025 14:29:49'!
+for: aGitCompiledMethodHistory 
+	
+	^ self new
+		initializeFor: aGitCompiledMethodHistory! !
+
+!GitCompiledMethodHistoryModel class methodsFor: 'instance creation' stamp: 'NPM 3/7/2025 14:29:24'!
+fromCompiledMethod: aCompiledMethod 
+	
+	^ self for: aCompiledMethod gitHistory! !
+
+!GitHistoryWindow methodsFor: 'GUI building' stamp: 'NPM 3/7/2025 13:49:39'!
+addCommitList
+
+	layoutMorph addMorphUseAll: self buildCommitList! !
+
+!GitHistoryWindow methodsFor: 'GUI building' stamp: 'NPM 3/7/2025 13:49:23'!
 buildMorphicWindow
 	
-	layoutMorph addMorphUseAll: (
-		PluggableListMorph
+	self addCommitList! !
+
+!GitHistoryWindow methodsFor: 'GUI widgets' stamp: 'NPM 3/7/2025 14:05:54'!
+buildCommitList
+
+	^ PluggableListMorph
 			withModel: model
 			listGetter: #commits
-			indexGetter: #selectedIndex
-			indexSetter: #selectedIndex: )! !
+			indexGetter: #selectedCommitIndex
+			indexSetter: #selectCommitAt:! !
 
-!GitLogWindow class methodsFor: 'instance creation' stamp: 'NPM 3/3/2025 01:37:31'!
-openOnFile: aFilePath 
+!GitHistoryWindow methodsFor: 'events - handling' stamp: 'NPM 3/7/2025 14:37:52'!
+selectedCommitChanged
 	
-	| commits model gitClient |
-	
-	
-	gitClient := GitClient new.
-	
-	
-	
-	
-	
-	commits := gitClient fileLog: aFilePath.
-	model := FileLogModel for: aFilePath log: commits.
-	
-	self open: model label: 'Git log: ', aFilePath! !
+	"Do nothing"! !
 
-!GitSourceCodeWindow methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 11:47:22'!
+!GitHistoryWindow methodsFor: 'label' stamp: 'NPM 3/7/2025 14:12:00'!
+update: aSymbol
+
+	aSymbol = #selectedCommitIndex
+		ifTrue: [ self selectedCommitChanged ]! !
+
+!GitHistoryWindow class methodsFor: 'instance creation' stamp: 'NPM 3/7/2025 14:10:42'!
+openCodePackage: aCodePackage 
+	
+	^ GitCodePackageHistoryWindow openCodePackage: aCodePackage! !
+
+!GitHistoryWindow class methodsFor: 'instance creation' stamp: 'NPM 3/7/2025 14:25:33'!
+openCompiledMethod: aCompiledMethod 
+	
+	GitCompiledMethodHistoryWindow openCompiledMethod: aCompiledMethod! !
+
+!GitCodePackageHistoryWindow methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:16:41'!
+selectedCommitChanged
+
+	model selectedCommitIndex = 0
+		ifTrue: [ ^ self ].
+	
+	(CodeFileBrowser browseCodeSource: model selectedCodePackage)
+		removeUpToDate! !
+
+!GitCodePackageHistoryWindow class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:25:35'!
+openCodePackage: aCodePackage 
+	
+	self
+		open: (GitHistoryModel fromCodePackage: aCodePackage)
+		label: 'Git history: ', aCodePackage packageName, ' package'! !
+
+!GitCompiledMethodHistoryWindow methodsFor: 'GUI building' stamp: 'NPM 3/7/2025 13:51:50'!
+addSourceCodeEditor
+
+	^ layoutMorph addMorphUseAll: self buildSourceCodeEditor! !
+
+!GitCompiledMethodHistoryWindow methodsFor: 'GUI building' stamp: 'NPM 3/7/2025 13:51:54'!
 buildMorphicWindow
+
+	super buildMorphicWindow.
 	
+	self addSourceCodeEditor! !
 
-	layoutMorph addMorphUseAll: (PluggableListMorph withModel: model listGetter: #commits indexGetter: #selectedCommitIndex indexSetter: #selectCommitAt:).
-	layoutMorph addMorphUseAll: (
-	
+!GitCompiledMethodHistoryWindow methodsFor: 'GUI widgets' stamp: 'NPM 3/7/2025 13:51:27'!
+buildSourceCodeEditor
 
+	^ (TextModelMorph textProvider: model textGetter: #sourceCode)
+		emptyTextDisplayMessage: 'Selection detail (no change selected?)'! !
 
-	(TextModelMorph
-		textProvider: model
-		textGetter: #sourceCode) emptyTextDisplayMessage: 'Selection detail (no change selected?)'
-	
-	)! !
-
-!GitSourceCodeWindow class methodsFor: 'as yet unclassified' stamp: 'NPM 3/4/2025 12:13:43'!
+!GitCompiledMethodHistoryWindow class methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:40:35'!
 openCompiledMethod: aCompiledMethod 
 	
 	^ self
-		open: (GitSourceCodeModel forCompiledMethod: aCompiledMethod)
+		open: (GitHistoryModel fromCompiledMethod: aCompiledMethod)
 		label: 'Git log: ', aCompiledMethod classAndSelector! !
-
-!GitCodePackageListWindow methodsFor: 'GUI building' stamp: 'NPM 2/28/2025 02:05:50'!
-buildButtonPane
-
-	| b |
-	b := super buildButtonPane.
-	
-	b addMorph: (
-	PluggableButtonMorph 
-							model: self 
-							action: #showGitHistory 
-							label: 'git history'
-	).
-	
-	^ b! !
-
-!GitCodePackageListWindow methodsFor: 'git' stamp: 'NPM 2/28/2025 13:38:27'!
-showGitHistory
-
-	GitLogWindow openOnFile: model selection fullFileName! !
-
-!GitCodePackageListWindow class methodsFor: 'instance creation' stamp: 'NPM 2/28/2025 02:05:33'!
-open
-	
-	self open: CodePackageList new! !
-
-!GitCodePackageListWindow class methodsFor: 'menu-world' stamp: 'NPM 2/28/2025 08:53:59'!
-worldMenuOptions
-	^ {{
-			#submenuOf		-> 		TheWorldMenu openLabel.
-			#itemGroup 		-> 		40.
-			#itemOrder 		-> 		30.
-			#label 				-> 		'Git Client'.
-			#object 			-> 		self.
-			#selector 			-> 		#open.
-			#icon 				-> 		#packageIcon.
-		} asDictionary}! !
 
 !CompiledMethod methodsFor: '*GitClient' stamp: 'NPM 3/4/2025 10:08:07'!
 gitHistory
@@ -730,19 +689,44 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/5/2025 14:00:20'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 14:23:59'!
 gitHistoryOfSelectedMethod
-	self halt.
-	GitSourceCodeWindow openCompiledMethod: self currentCompiledMethod! !
+	
+	GitHistoryWindow openCompiledMethod: self currentCompiledMethod! !
 
-!CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/4/2025 09:37:03'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 14:02:10'!
+gitHistoryOfSelectedPackage
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :packageFileName | GitHistoryWindow openCodePackage: self selectedPackage ]
+! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 13:44:27'!
+selectedPackage
+
+	^ CodePackage installedPackages at: self selectedSystemCategory  ifAbsent: [ self halt ]! !
+
+!CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 01:41:22'!
+codePackageFile
+	
+	^ CodePackageFile
+		at: fullFileName
+		contents: self codePackageFileContents readStream! !
+
+!CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 01:41:00'!
+codePackageFileContents
+	
+	^ String streamContents: [ :fileContents | self writeOnStream: fileContents ]! !
+
+!CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 01:26:50'!
 gitHistory
 	
-	^ GitCodePackageFileHistory at: fullFileName 
+	^ GitCodePackageFileHistory for: self
 	! !
 
-!CodePackageFile methodsFor: '*GitClient' stamp: 'NPM 3/4/2025 12:31:41'!
-includesSelector: aSelector in: aClassName 
+!CodePackageFile methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 02:07:24'!
+includesSelector: aSelector inClassNamed: aClassName 
 	
 	^ classes
 		at: aClassName
