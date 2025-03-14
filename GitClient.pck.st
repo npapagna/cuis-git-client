@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7062] on 10 March 2025 at 1:37:51 pm'!
-'Description Refactors'!
-!provides: 'GitClient' 1 7!
+'From Cuis7.3 [latest update: #7070] on 14 March 2025 at 3:37:21 pm'!
+'Description Remove up to date classes in diff'!
+!provides: 'GitClient' 1 9!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
@@ -745,7 +745,7 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/10/2025 13:33:02'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/14/2025 15:32:35'!
 compareSelectedPackageWithGitBranch
 	
 	self selectedPackage
@@ -761,7 +761,7 @@ compareSelectedPackageWithGitBranch
 				packageFileContentsInSelectedBranch := gitClient contentsOfFile: codePackage fullFileName onBranch: branch.
 				packageFile := CodePackageFile at:codePackage fullFileName  contents: packageFileContentsInSelectedBranch readStream.
 				(CodeFileBrowser browseCodeSource: packageFile)
-					removeUpToDate
+					removeUnmodifiedClasses
 			]
 	 ]! !
 
