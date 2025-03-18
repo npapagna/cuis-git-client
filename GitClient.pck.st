@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7071] on 18 March 2025 at 4:02:47 pm'!
-'Description Merge changes from remote branches'!
-!provides: 'GitClient' 1 10!
+'From Cuis7.3 [latest update: #7071] on 18 March 2025 at 4:21:46 pm'!
+'Description Fetch/Add timeout to git commands'!
+!provides: 'GitClient' 1 11!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
@@ -296,10 +296,16 @@ fileLog: aFilePath
 	
 	^ GitCommitParser parseAllIn: commandOutput for: self! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/2/2025 10:05:13'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 16:14:20'!
 outputOfGitCommand: aCommand on: aDirectoryPath
 
-	^ OSProcess outputOf: 'git -C ', aDirectoryPath ,' ', aCommand! !
+	| gitCommand |
+	
+	gitCommand := 'git -C ', aDirectoryPath ,' ', aCommand.
+	
+	^ [  OSProcess outputOf: gitCommand ]
+		valueWithin: 30 seconds
+		onTimeout: [ self error: 'Git command timed out: ', gitCommand ]! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:07:07'!
 outputOfGitLogCommandForFile: aFilePath
@@ -330,8 +336,10 @@ outputOfGitLogCommandForFile: aFilePath onBranchNamed: branchName
 		outputOfGitCommand:  'show ', fileNameInBranch
 		on: currentFolder asString! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 10:51:31'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 16:20:54'!
 remoteBranchesIncludingFile: aFilePath 
+
+	self outputOfGitCommand: 'fetch' on: aFilePath asFileEntry parent asString.
 
 	^ ((self outputOfGitCommand: 'branch -r' on: aFilePath asFileEntry parent asString) lines
 	   collect: [ :l | l withoutLeadingBlanks withoutTrailingBlanks ])
