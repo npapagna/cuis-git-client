@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7070] on 14 March 2025 at 3:37:21 pm'!
-'Description Remove up to date classes in diff'!
-!provides: 'GitClient' 1 9!
+'From Cuis7.3 [latest update: #7071] on 18 March 2025 at 4:02:47 pm'!
+'Description Merge changes from remote branches'!
+!provides: 'GitClient' 1 10!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #'GitClient-Model'!
@@ -561,7 +561,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 10:39:43'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 15:29:20'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -569,6 +569,7 @@ systemCatListMenuSpec
 	^#(
 		#(0	'Git history' 	nil 	model 	gitHistoryOfSelectedPackage 						packageIcon)
 		#(1	'Compare with branch...' 	nil 	model 	compareSelectedPackageWithGitBranch 						packageIcon)
+		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
 		#(3 	'-----')
 	)! !
 
@@ -778,10 +779,61 @@ gitHistoryOfSelectedPackage
 		ifNotNil: [ :codePackage | GitHistoryWindow openCodePackage: self selectedPackage ]
 ! !
 
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 15:57:45'!
+mergeSelectedPackageFromGitBranch
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient |
+			gitClient := GitClient new.
+			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			
+			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to merge from'.
+		
+			selectedBranchIndex > 0 ifTrue: [ | branch packageFileContentsInSelectedBranch packageFile changeList |
+				branch := remoteBranches at: selectedBranchIndex.
+				packageFileContentsInSelectedBranch := gitClient contentsOfFile: codePackage fullFileName onBranch: branch.
+				packageFile := CodePackageFile at:codePackage fullFileName  contents: packageFileContentsInSelectedBranch readStream.
+				changeList := ChangeList browseCodePackageFile: packageFile contents: packageFileContentsInSelectedBranch readStream.
+				changeList
+					removeDoIts;
+					removeEmptyClassComments;
+					removeOlderMethodVersions;
+					removeUpToDate.
+			]
+	 ]! !
+
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 13:44:27'!
 selectedPackage
 
 	^ CodePackage installedPackages at: self selectedSystemCategory  ifAbsent: [ self halt ]! !
+
+!ChangeList class methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 16:02:24'!
+browseCodePackageFile: packageFile contents: stream
+
+
+	"IMPORTANT: this is a copy-paste from browsePackageContents: because it needs an actual
+	file to do the work. When comparing changes from Git we dont have a file for the package (the stream
+	comes from the Git Server)"
+
+
+	| changeList |
+
+	changeList := self new scanFile: stream from: 0 to: stream size.
+	
+	"Add deletions of methods and classes that are in the CodePackage (i.e., active in the system)
+	but are no longer in the CodePackageFile being viewed."
+	packageFile methodsToRemove do: [ :methodReference |
+		changeList
+			addItem: (MethodDeletionChangeRecord new methodReference: methodReference)
+			text: 'method no longer in package: ', methodReference stringVersion ].
+	packageFile classesToRemove do: [ :clsName |
+		changeList
+			addItem: (ClassDeletionChangeRecord new className: clsName)
+			text: 'class no longer in package: ', clsName ].
+	changeList clearSelections.
+	ChangeListWindow open: changeList label: packageFile packageName.
+	^ changeList! !
 
 !CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 01:41:22'!
 codePackageFile
