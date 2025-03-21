@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7087] on 21 March 2025 at 9:54:32 am'!
-'Description Fetch/Add timeout to git commands'!
-!provides: 'GitClient' 1 12!
+'From Cuis7.3 [latest update: #7087] on 21 March 2025 at 7:14:33 pm'!
+'Description add package name to commit'!
+!provides: 'GitClient' 1 13!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -765,17 +765,20 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/21/2025 09:43:09'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/21/2025 18:26:57'!
 commitSelectedPackageInCurrentGitBranch
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'No package is selected' ]
 		ifNotNil: [ :codePackage | 
-			codePackage hasUnsavedChanges ifTrue: [
-				codePackage save.
-				].
 			
-			self request: 'Enter commit message' initialAnswer: '' verifying: [ :commitMessage | commitMessage size <= 50 ]  do: [ :commitMessage | | gitClient |	gitClient := GitClient new.
+			
+			self request: 'Enter commit message' initialAnswer: '' verifying: [ :commitMessage | commitMessage size <= 50 ]  do: [ :commitMessage | | gitClient |
+				
+				codePackage description: commitMessage.
+				codePackage save.
+								
+				gitClient := GitClient new.
 				gitClient commit: commitMessage packageFile: self selectedPackage fullFileName
 				 ]
 			]! !
