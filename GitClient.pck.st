@@ -1,11 +1,11 @@
-'From Cuis7.3 [latest update: #7071] on 18 March 2025 at 4:21:46 pm'!
+'From Cuis7.3 [latest update: #7087] on 21 March 2025 at 9:54:32 am'!
 'Description Fetch/Add timeout to git commands'!
-!provides: 'GitClient' 1 11!
+!provides: 'GitClient' 1 12!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
+SystemOrganization addCategory: #GitClient!
 SystemOrganization addCategory: #'GitClient-Model'!
 SystemOrganization addCategory: #'GitClient-UI'!
-SystemOrganization addCategory: #GitClient!
 
 
 !classDefinition: #GitCompiledMethodHistory category: #GitClient!
@@ -266,6 +266,16 @@ for: aCompiledMethod
 	
 	^ self new
 		initializeFor: aCompiledMethod! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/21/2025 09:54:10'!
+commit: aMessage packageFile: aFilePath 
+	
+	| file |
+	file := aFilePath asFileEntry.
+
+	self outputOfGitCommand: 'add ', file name on: file parent asString.
+	
+	self outputOfGitCommand: 'commit -m ''', aMessage, '''' on: file parent asString.! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:32:20'!
 contentsOfFile: aFilePath at: aCommitHash 
@@ -569,7 +579,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 15:29:20'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/21/2025 09:32:16'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -578,6 +588,7 @@ systemCatListMenuSpec
 		#(0	'Git history' 	nil 	model 	gitHistoryOfSelectedPackage 						packageIcon)
 		#(1	'Compare with branch...' 	nil 	model 	compareSelectedPackageWithGitBranch 						packageIcon)
 		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
+		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
 		#(3 	'-----')
 	)! !
 
@@ -753,6 +764,21 @@ gitHistory
 	
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/21/2025 09:43:09'!
+commitSelectedPackageInCurrentGitBranch
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'No package is selected' ]
+		ifNotNil: [ :codePackage | 
+			codePackage hasUnsavedChanges ifTrue: [
+				codePackage save.
+				].
+			
+			self request: 'Enter commit message' initialAnswer: '' verifying: [ :commitMessage | commitMessage size <= 50 ]  do: [ :commitMessage | | gitClient |	gitClient := GitClient new.
+				gitClient commit: commitMessage packageFile: self selectedPackage fullFileName
+				 ]
+			]! !
 
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/14/2025 15:32:35'!
 compareSelectedPackageWithGitBranch
