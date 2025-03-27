@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7087] on 21 March 2025 at 7:14:33 pm'!
-'Description add package name to commit'!
-!provides: 'GitClient' 1 13!
+'From Cuis7.3 [latest update: #7092] on 27 March 2025 at 9:41:30 am'!
+'Description Use root category for finding packages'!
+!provides: 'GitClient' 1 14!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -840,10 +840,10 @@ mergeSelectedPackageFromGitBranch
 			]
 	 ]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 13:44:27'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 3/27/2025 09:41:10'!
 selectedPackage
 
-	^ CodePackage installedPackages at: self selectedSystemCategory  ifAbsent: [ self halt ]! !
+	^ CodePackage installedPackages at: (SystemOrganization rootCategoryOf: self selectedSystemCategory)  ifAbsent: [ self halt ]! !
 
 !ChangeList class methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 16:02:24'!
 browseCodePackageFile: packageFile contents: stream
