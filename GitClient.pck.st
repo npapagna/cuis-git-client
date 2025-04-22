@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7092] on 27 March 2025 at 9:41:30 am'!
-'Description Use root category for finding packages'!
-!provides: 'GitClient' 1 14!
+'From Cuis7.3 [latest update: #7099] on 22 April 2025 at 9:47:47 am'!
+'Description Install packages from remote branches'!
+!provides: 'GitClient' 1 15!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -298,6 +298,23 @@ contentsOfFile: aFilePath onBranch: aBranchName
 		outputOfGitCommand:  'show ', aBranchName, ':.', fileName
 		on: repositoryRoot asString! !
 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:30:22'!
+createTemporaryFolder
+	
+	^ (self outputOfCommand: 'mktemp -d') asDirectoryEntry! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:40:58'!
+downloadFile: aFilePath fromBranch: aBranchName 
+	
+	| fileContents packageFileEntry |
+
+	fileContents := self contentsOfFile: aFilePath onBranch: aBranchName.
+	packageFileEntry := aFilePath asFileEntry.
+
+	packageFileEntry fileContents: fileContents.
+
+	^ packageFileEntry ! !
+
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:35:51'!
 fileLog: aFilePath
 
@@ -306,16 +323,17 @@ fileLog: aFilePath
 	
 	^ GitCommitParser parseAllIn: commandOutput for: self! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 16:14:20'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:29:40'!
+outputOfCommand: aCommand
+
+	^ [  OSProcess outputOf: aCommand ]
+		valueWithin: 30 seconds
+		onTimeout: [ self error: 'Command timed out: ', aCommand ]! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:29:48'!
 outputOfGitCommand: aCommand on: aDirectoryPath
 
-	| gitCommand |
-	
-	gitCommand := 'git -C ', aDirectoryPath ,' ', aCommand.
-	
-	^ [  OSProcess outputOf: gitCommand ]
-		valueWithin: 30 seconds
-		onTimeout: [ self error: 'Git command timed out: ', gitCommand ]! !
+	^ self outputOfCommand: 'git -C ', aDirectoryPath ,' ', aCommand! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:07:07'!
 outputOfGitLogCommandForFile: aFilePath
@@ -579,7 +597,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 3/21/2025 09:32:16'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:08:23'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -590,6 +608,8 @@ systemCatListMenuSpec
 		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
 		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
 		#(3 	'-----')
+		#(4	'Install package from branch...' 	nil 	model 	installSelectedPackageFromGitBranch 						packageIcon)
+		#(5 	'-----')
 	)! !
 
 !GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
@@ -816,6 +836,13 @@ gitHistoryOfSelectedPackage
 		ifNotNil: [ :codePackage | GitHistoryWindow openCodePackage: self selectedPackage ]
 ! !
 
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/22/2025 09:34:31'!
+installSelectedPackageFromGitBranch
+	
+	self
+		withCodePackageFileFromGitBranchWithCaption: 'Select a branch to install the package from'
+		do: [ :packageFile | packageFile install ]! !
+
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 15:57:45'!
 mergeSelectedPackageFromGitBranch
 	
@@ -844,6 +871,27 @@ mergeSelectedPackageFromGitBranch
 selectedPackage
 
 	^ CodePackage installedPackages at: (SystemOrganization rootCategoryOf: self selectedSystemCategory)  ifAbsent: [ self halt ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/22/2025 09:44:31'!
+withCodePackageFileFromGitBranchWithCaption: aCaption do: aCodePackageBlock
+	
+	^ self selectedPackage
+		ifNil: [ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient installPackage |
+			installPackage := self confirm: 'Warning: Uncommited changes to ', codePackage fullFileName asFileEntry name,' (if any) will be lost. Do you want to continue?'.
+			installPackage ifFalse: [ ^ self ].
+			
+			gitClient := GitClient new.
+			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			
+			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: aCaption.
+		
+			selectedBranchIndex > 0 ifTrue: [ | branch packageFileEntry |
+				branch := remoteBranches at: selectedBranchIndex.
+				packageFileEntry := gitClient downloadFile: codePackage fullFileName fromBranch: branch.
+				aCodePackageBlock value: (CodePackageFile onFileEntry: packageFileEntry).
+			]
+	 ]! !
 
 !ChangeList class methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 16:02:24'!
 browseCodePackageFile: packageFile contents: stream
