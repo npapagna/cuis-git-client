@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7099] on 22 April 2025 at 9:47:47 am'!
-'Description Install packages from remote branches'!
-!provides: 'GitClient' 1 15!
+'From Cuis7.3 [latest update: #7102] on 24 April 2025 at 9:54:07 am'!
+'Description Create GitClient with a repository folder'!
+!provides: 'GitClient' 1 16!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -40,7 +40,7 @@ GitUncommitedCompiledMethod class
 
 !classDefinition: #GitClient category: #'GitClient-Model'!
 Object subclass: #GitClient
-	instanceVariableNames: ''
+	instanceVariableNames: 'repositoryFolderPath'
 	classVariableNames: ''
 	poolDictionaries: ''
 	category: 'GitClient-Model'!
@@ -267,17 +267,17 @@ for: aCompiledMethod
 	^ self new
 		initializeFor: aCompiledMethod! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/21/2025 09:54:10'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:52:49'!
 commit: aMessage packageFile: aFilePath 
 	
 	| file |
 	file := aFilePath asFileEntry.
 
-	self outputOfGitCommand: 'add ', file name on: file parent asString.
+	self outputOfGitCommand: 'add ', file name .
 	
-	self outputOfGitCommand: 'commit -m ''', aMessage, '''' on: file parent asString.! !
+	self outputOfGitCommand: 'commit -m ''', aMessage, '''' .! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/3/2025 01:32:20'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:52:49'!
 contentsOfFile: aFilePath at: aCommitHash 
 	
 	| file |
@@ -285,18 +285,18 @@ contentsOfFile: aFilePath at: aCommitHash
 	
 	^ self
 		outputOfGitCommand: 'show ', aCommitHash,':./', file name
-		on: file parent asString! !
+		! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:36:16'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:52:49'!
 contentsOfFile: aFilePath onBranch: aBranchName 
 	
-	| fileName repositoryRoot |
-	repositoryRoot:= self repositoryRootFor: aFilePath.
-	fileName := aFilePath withoutPrefix: repositoryRoot asString.
+	| fileName |
+	
+	fileName := aFilePath withoutPrefix: repositoryFolderPath.
 	
 	^ self
 		outputOfGitCommand:  'show ', aBranchName, ':.', fileName
-		on: repositoryRoot asString! !
+		! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:30:22'!
 createTemporaryFolder
@@ -323,6 +323,11 @@ fileLog: aFilePath
 	
 	^ GitCommitParser parseAllIn: commandOutput for: self! !
 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:36:25'!
+initializeRepositoryFolderPath: aFolderPath 
+	
+	repositoryFolderPath := aFolderPath! !
+
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:29:40'!
 outputOfCommand: aCommand
 
@@ -330,48 +335,26 @@ outputOfCommand: aCommand
 		valueWithin: 30 seconds
 		onTimeout: [ self error: 'Command timed out: ', aCommand ]! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:29:48'!
-outputOfGitCommand: aCommand on: aDirectoryPath
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:52:49'!
+outputOfGitCommand: aCommand 
 
-	^ self outputOfCommand: 'git -C ', aDirectoryPath ,' ', aCommand! !
+	^ self outputOfCommand: 'git -C ', repositoryFolderPath ,' ', aCommand! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:07:07'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:52:49'!
 outputOfGitLogCommandForFile: aFilePath
 
 	^ self
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
-		on: aFilePath asFileEntry parent pathName! !
+		! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:29:55'!
-outputOfGitLogCommandForFile: aFilePath onBranchNamed: branchName 
-
-	| fileName fileNameInBranch currentFolder |
-	currentFolder:= aFilePath asFileEntry.
-	[
-		currentFolder := currentFolder parent.
-		(currentFolder directoryMatching: '.git') isNil ] whileTrue: [
-		(DirectoryEntry roots includes: currentFolder) ifTrue: [ self halt ]
-	].
-
-	fileName := aFilePath withoutPrefix: currentFolder asString.
-	
-	fileNameInBranch := branchName
-		ifEmpty: [ ':.', fileName ]
-		ifNotEmpty: [branchName,':.', fileName ].
-	
-	
-	^ self
-		outputOfGitCommand:  'show ', fileNameInBranch
-		on: currentFolder asString! !
-
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/18/2025 16:20:54'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:53:50'!
 remoteBranchesIncludingFile: aFilePath 
 
-	self outputOfGitCommand: 'fetch' on: aFilePath asFileEntry parent asString.
+	self outputOfGitCommand: 'fetch' .
 
-	^ ((self outputOfGitCommand: 'branch -r' on: aFilePath asFileEntry parent asString) lines
-	   collect: [ :l | l withoutLeadingBlanks withoutTrailingBlanks ])
-	select: [ :l | l isEmpty not]! !
+	^ ((self outputOfGitCommand: 'branch -r' ) lines
+		collect: [ :line | line withoutLeadingBlanks withoutTrailingBlanks ])
+		select: [ :line | line isEmpty not]! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:35:51'!
 repositoryRootFor: aFilePath
@@ -386,6 +369,25 @@ repositoryRootFor: aFilePath
 	].
 	
 	^ repositoryRoot! !
+
+!GitClient class methodsFor: 'instance creation' stamp: 'NPM 4/24/2025 09:36:25'!
+ofPackageAt: aFilePath
+	
+	^ self new
+		initializeRepositoryFolderPath: (self repositoryFolderOf: aFilePath)! !
+
+!GitClient class methodsFor: 'instance creation' stamp: 'NPM 4/24/2025 09:40:05'!
+repositoryFolderOf: aFilePath
+	
+	| fileEntry repositoryFolderPath parentFolderPath |
+	
+	fileEntry := aFilePath asFileEntry.
+	parentFolderPath := fileEntry parent asString.
+	
+	repositoryFolderPath := (OSProcess outputOf: 'git -C ', parentFolderPath, ' rev-parse --git-dir') withBlanksTrimmed.
+	repositoryFolderPath = '.git' ifTrue: [ repositoryFolderPath := parentFolderPath ].
+	
+	^ repositoryFolderPath! !
 
 !GitCodePackageFileHistory methodsFor: 'code package files' stamp: 'NPM 3/8/2025 02:22:24'!
 codePackageFileFrom: aGitCommit 
@@ -437,12 +439,12 @@ sourceCodeOf: aSelector inClassNamed: aClassName fromCommitAt: anIndex
 	^ (self codePackageFileFromCommitAt: anIndex)
 		sourceCodeOf: aSelector in: aClassName! !
 
-!GitCodePackageFileHistory class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 01:28:43'!
+!GitCodePackageFileHistory class methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:43:54'!
 for: aCodePackage 
 	
 	^ self new
 		initializeAt: aCodePackage
-		withAll:  (GitClient new fileLog: aCodePackage fullFileName)! !
+		withAll:  ((GitClient ofPackageAt: aCodePackage fullFileName) fileLog: aCodePackage fullFileName)! !
 
 !GitCommit methodsFor: 'accessing' stamp: 'NPM 2/28/2025 13:14:25'!
 author
@@ -738,14 +740,14 @@ openCompiledMethod: aCompiledMethod
 	
 	GitCompiledMethodHistoryWindow openCompiledMethod: aCompiledMethod! !
 
-!GitCodePackageHistoryWindow methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:16:41'!
+!GitCodePackageHistoryWindow methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:50:06'!
 selectedCommitChanged
 
 	model selectedCommitIndex = 0
 		ifTrue: [ ^ self ].
 	
 	(CodeFileBrowser browseCodeSource: model selectedCodePackage)
-		removeUpToDate! !
+		! !
 
 !GitCodePackageHistoryWindow class methodsFor: 'as yet unclassified' stamp: 'NPM 3/8/2025 02:25:35'!
 openCodePackage: aCodePackage 
@@ -785,7 +787,7 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/21/2025 18:26:57'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:52:08'!
 commitSelectedPackageInCurrentGitBranch
 	
 	self selectedPackage
@@ -798,18 +800,18 @@ commitSelectedPackageInCurrentGitBranch
 				codePackage description: commitMessage.
 				codePackage save.
 								
-				gitClient := GitClient new.
+				gitClient := GitClient ofPackageAt: codePackage fullFileName.
 				gitClient commit: commitMessage packageFile: self selectedPackage fullFileName
 				 ]
 			]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/14/2025 15:32:35'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:37:53'!
 compareSelectedPackageWithGitBranch
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
 		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient |
-			gitClient := GitClient new.
+			gitClient := GitClient ofPackageAt: codePackage fullFileName.
 			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to compare to'.
@@ -872,7 +874,7 @@ selectedPackage
 
 	^ CodePackage installedPackages at: (SystemOrganization rootCategoryOf: self selectedSystemCategory)  ifAbsent: [ self halt ]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/22/2025 09:44:31'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:32:04'!
 withCodePackageFileFromGitBranchWithCaption: aCaption do: aCodePackageBlock
 	
 	^ self selectedPackage
@@ -881,7 +883,7 @@ withCodePackageFileFromGitBranchWithCaption: aCaption do: aCodePackageBlock
 			installPackage := self confirm: 'Warning: Uncommited changes to ', codePackage fullFileName asFileEntry name,' (if any) will be lost. Do you want to continue?'.
 			installPackage ifFalse: [ ^ self ].
 			
-			gitClient := GitClient new.
+			gitClient := GitClient ofPackageAt: codePackage fullFileName.
 			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: aCaption.
