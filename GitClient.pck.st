@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 1:46:23 pm'!
-'Description switch to temporary branch and reinstall package'!
-!provides: 'GitClient' 1 17!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:05:35 pm'!
+'Description List all branches + commit and push'!
+!provides: 'GitClient' 1 18!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -352,12 +352,12 @@ outputOfGitLogCommandForFile: aFilePath
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
 		! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:53:50'!
-remoteBranchesIncludingFile: aFilePath 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:01:27'!
+remoteAndLocalBranchesIncludingFile: aFilePath 
 
 	self outputOfGitCommand: 'fetch' .
 
-	^ ((self outputOfGitCommand: 'branch -r' ) lines
+	^ ((self outputOfGitCommand: 'branch --all' ) lines
 		collect: [ :line | line withoutLeadingBlanks withoutTrailingBlanks ])
 		select: [ :line | line isEmpty not]! !
 
@@ -617,7 +617,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 13:44:37'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:02:20'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -627,9 +627,10 @@ systemCatListMenuSpec
 		#(1	'Compare with branch...' 	nil 	model 	compareSelectedPackageWithGitBranch 						packageIcon)
 		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
 		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
-		#(3 	'-----')
-		#(4	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
-		#(5 	'-----')
+		#(3	'Commit and push...' 	nil 	model 	commitAndPushSelectedPackageInCurrentGitBranch 						packageIcon)
+		#(4 	'-----')
+		#(5	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
+		#(6 	'-----')
 	)! !
 
 !GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
@@ -805,8 +806,14 @@ gitHistory
 	^ self methodClass package gitHistory
 		historyOfCompiledMethod: self! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:52:08'!
-commitSelectedPackageInCurrentGitBranch
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:05:18'!
+commitAndPushSelectedPackageInCurrentGitBranch
+	
+	self commitSelectedPackageAfterDo: [ :codePackage :gitClient | 
+		gitClient push ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:04:11'!
+commitSelectedPackageAfterDo: aBlock 
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'No package is selected' ]
@@ -819,18 +826,24 @@ commitSelectedPackageInCurrentGitBranch
 				codePackage save.
 								
 				gitClient := GitClient ofPackageAt: codePackage fullFileName.
-				gitClient commit: commitMessage packageFile: self selectedPackage fullFileName
+				gitClient commit: commitMessage packageFile: self selectedPackage fullFileName.
+				aBlock value: codePackage value: gitClient
 				 ]
 			]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:37:53'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:05:03'!
+commitSelectedPackageInCurrentGitBranch
+	
+	self commitSelectedPackageAfterDo: [ :codePackage :gitClient | "Do nothing" ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:01:27'!
 compareSelectedPackageWithGitBranch
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
 		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient |
 			gitClient := GitClient ofPackageAt: codePackage fullFileName.
-			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			remoteBranches := gitClient remoteAndLocalBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to compare to'.
 		
@@ -856,14 +869,14 @@ gitHistoryOfSelectedPackage
 		ifNotNil: [ :codePackage | GitHistoryWindow openCodePackage: self selectedPackage ]
 ! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 15:57:45'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:01:27'!
 mergeSelectedPackageFromGitBranch
 	
 	self selectedPackage
 		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
 		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient |
 			gitClient := GitClient new.
-			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			remoteBranches := gitClient remoteAndLocalBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to merge from'.
 		
@@ -892,7 +905,7 @@ switchToTemporaryBranchAndReinstallSelectedPackage
 		switchToTemporaryGitBranchWithCaption: 'Select a branch to switch and reinstall the package from'
 		afterSwitchDo: [ :currentCodePackage | CodePackageFile installPackage: currentCodePackage fullFileName asFileEntry ]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 13:45:07'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:01:27'!
 switchToTemporaryGitBranchWithCaption: aCaption afterSwitchDo: aBlock  
 	
 	^ self selectedPackage
@@ -908,7 +921,7 @@ switchToTemporaryGitBranchWithCaption: aCaption afterSwitchDo: aBlock
 			
 			
 			
-			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
+			remoteBranches := gitClient remoteAndLocalBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: aCaption.
 			
