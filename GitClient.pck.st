@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 24 April 2025 at 9:54:07 am'!
-'Description Create GitClient with a repository folder'!
-!provides: 'GitClient' 1 16!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 1:46:23 pm'!
+'Description switch to temporary branch and reinstall package'!
+!provides: 'GitClient' 1 17!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -323,6 +323,11 @@ fileLog: aFilePath
 	
 	^ GitCommitParser parseAllIn: commandOutput for: self! !
 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 13:19:30'!
+hasUncommitedChanges
+	
+	^ (self outputOfGitCommand: 'status --short') withBlanksTrimmed notEmpty! !
+
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/24/2025 09:36:25'!
 initializeRepositoryFolderPath: aFolderPath 
 	
@@ -369,6 +374,19 @@ repositoryRootFor: aFilePath
 	].
 	
 	^ repositoryRoot! !
+
+!GitClient methodsFor: 'comparing' stamp: 'NPM 4/25/2025 13:33:58'!
+forceSwitchToBranchNamed: aString localName: aString2 
+	
+	[ self outputOfGitCommand: 'switch -f --force-create ', aString2, ' ', aString ]
+		on: Error
+		do: [ :error | 
+			error messageText withBlanksTrimmed = ('Switched to a new branch ''', aString2,'''') ifTrue: [ ^ self ].
+			error messageText withBlanksTrimmed = ('Reset branch ''', aString2,'''') ifTrue: [ ^ self ].
+			error messageText withBlanksTrimmed = ('Switched to and reset branch ''', aString2,'''') ifTrue: [ ^ self ].
+			self halt.
+		
+		]! !
 
 !GitClient class methodsFor: 'instance creation' stamp: 'NPM 4/24/2025 09:36:25'!
 ofPackageAt: aFilePath
@@ -599,7 +617,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:08:23'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 13:44:37'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -610,7 +628,7 @@ systemCatListMenuSpec
 		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
 		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
 		#(3 	'-----')
-		#(4	'Install package from branch...' 	nil 	model 	installSelectedPackageFromGitBranch 						packageIcon)
+		#(4	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
 		#(5 	'-----')
 	)! !
 
@@ -838,13 +856,6 @@ gitHistoryOfSelectedPackage
 		ifNotNil: [ :codePackage | GitHistoryWindow openCodePackage: self selectedPackage ]
 ! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/22/2025 09:34:31'!
-installSelectedPackageFromGitBranch
-	
-	self
-		withCodePackageFileFromGitBranchWithCaption: 'Select a branch to install the package from'
-		do: [ :packageFile | packageFile install ]! !
-
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/18/2025 15:57:45'!
 mergeSelectedPackageFromGitBranch
 	
@@ -874,24 +885,37 @@ selectedPackage
 
 	^ CodePackage installedPackages at: (SystemOrganization rootCategoryOf: self selectedSystemCategory)  ifAbsent: [ self halt ]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/24/2025 09:32:04'!
-withCodePackageFileFromGitBranchWithCaption: aCaption do: aCodePackageBlock
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 13:45:55'!
+switchToTemporaryBranchAndReinstallSelectedPackage
+	
+	self
+		switchToTemporaryGitBranchWithCaption: 'Select a branch to switch and reinstall the package from'
+		afterSwitchDo: [ :currentCodePackage | CodePackageFile installPackage: currentCodePackage fullFileName asFileEntry ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 13:45:07'!
+switchToTemporaryGitBranchWithCaption: aCaption afterSwitchDo: aBlock  
 	
 	^ self selectedPackage
 		ifNil: [ self inform: 'The package does not have a full file name' ]
 		ifNotNil: [ :codePackage | | remoteBranches selectedBranchIndex gitClient installPackage |
-			installPackage := self confirm: 'Warning: Uncommited changes to ', codePackage fullFileName asFileEntry name,' (if any) will be lost. Do you want to continue?'.
-			installPackage ifFalse: [ ^ self ].
-			
 			gitClient := GitClient ofPackageAt: codePackage fullFileName.
+			
+			gitClient hasUncommitedChanges ifTrue: [ 
+				installPackage := self confirm: 'Warning: Uncommited changes to ', codePackage fullFileName asFileEntry name,' (if any) will be lost. Do you want to continue?'.
+			installPackage ifFalse: [ ^ self ] ].
+			
+			
+			
+			
+			
 			remoteBranches := gitClient remoteBranchesIncludingFile: codePackage fullFileName.
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: aCaption.
-		
-			selectedBranchIndex > 0 ifTrue: [ | branch packageFileEntry |
+			
+			selectedBranchIndex > 0 ifTrue: [ | branch |
 				branch := remoteBranches at: selectedBranchIndex.
-				packageFileEntry := gitClient downloadFile: codePackage fullFileName fromBranch: branch.
-				aCodePackageBlock value: (CodePackageFile onFileEntry: packageFileEntry).
+				gitClient forceSwitchToBranchNamed: branch localName: 'CuisGitClient/temp/', branch.
+				aBlock value: codePackage
 			]
 	 ]! !
 
