@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:05:35 pm'!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:06:01 pm'!
 'Description List all branches + commit and push'!
-!provides: 'GitClient' 1 18!
+!provides: 'GitClient' 1 19!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -351,6 +351,11 @@ outputOfGitLogCommandForFile: aFilePath
 	^ self
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
 		! !
+
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:05:52'!
+push
+	
+	self outputOfGitCommand: 'push'! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:01:27'!
 remoteAndLocalBranchesIncludingFile: aFilePath 
