@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:07:39 pm'!
-'Description Push'!
-!provides: 'GitClient' 1 20!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:18:07 pm'!
+'Description Change compare strategy'!
+!provides: 'GitClient' 1 21!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -357,13 +357,18 @@ push
 	
 	self outputOfGitCommand: 'push'! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:01:27'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:13:28'!
 remoteAndLocalBranchesIncludingFile: aFilePath 
 
 	self outputOfGitCommand: 'fetch' .
 
 	^ ((self outputOfGitCommand: 'branch --all' ) lines
-		collect: [ :line | line withoutLeadingBlanks withoutTrailingBlanks ])
+		collect: [ :line | | cleanedUp |
+			cleanedUp := line withoutLeadingBlanks withoutTrailingBlanks.
+			(cleanedUp beginsWith: '*') 
+				ifTrue: [ cleanedUp  withoutPrefix: '* ' ]
+				ifFalse: [ cleanedUp ]
+			 ])
 		select: [ :line | line isEmpty not]! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 3/10/2025 13:35:51'!
@@ -842,7 +847,7 @@ commitSelectedPackageInCurrentGitBranch
 	
 	self commitSelectedPackageAfterDo: [ :codePackage :gitClient | "Do nothing" ]! !
 
-!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:01:27'!
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:17:20'!
 compareSelectedPackageWithGitBranch
 	
 	self selectedPackage
@@ -853,12 +858,25 @@ compareSelectedPackageWithGitBranch
 			
 			selectedBranchIndex := (PopUpMenu labelArray: remoteBranches) startUpWithCaption: 'Select a Git branch to compare to'.
 		
-			selectedBranchIndex > 0 ifTrue: [ | branch packageFileContentsInSelectedBranch packageFile |
+			selectedBranchIndex > 0 ifTrue: [ | branch packageFileEntry |
 				branch := remoteBranches at: selectedBranchIndex.
-				packageFileContentsInSelectedBranch := gitClient contentsOfFile: codePackage fullFileName onBranch: branch.
-				packageFile := CodePackageFile at:codePackage fullFileName  contents: packageFileContentsInSelectedBranch readStream.
-				(CodeFileBrowser browseCodeSource: packageFile)
-					removeUnmodifiedClasses
+				packageFileEntry := gitClient downloadFile: codePackage fullFileName fromBranch: branch.
+		
+				ChangeListWindow allInstancesDo: [:x | x delete ].
+				ChangeList browsePackageContents: packageFileEntry.
+				ChangeListWindow allInstances first model
+					removeDoIts;
+					removeEmptyClassComments;
+					removeOlderMethodVersions;
+					removeUpToDate
+		
+		
+				
+				
+				
+				
+				"(CodeFileBrowser browseCodeSource: packageFile)
+					removeUnmodifiedClasses"
 			]
 	 ]! !
 
@@ -898,6 +916,15 @@ mergeSelectedPackageFromGitBranch
 					removeUpToDate.
 			]
 	 ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:08:22'!
+pushSelectedPackageInCurrentGitBranch
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :codePackage |
+			(GitClient ofPackageAt: codePackage fullFileName)
+				push ]! !
 
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/27/2025 09:41:10'!
 selectedPackage
