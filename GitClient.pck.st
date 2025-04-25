@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:18:07 pm'!
-'Description Change compare strategy'!
-!provides: 'GitClient' 1 21!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:20:03 pm'!
+'Description push'!
+!provides: 'GitClient' 1 22!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -352,10 +352,18 @@ outputOfGitLogCommandForFile: aFilePath
 		outputOfGitCommand: ' --no-pager log --follow -- ', aFilePath asFileEntry name
 		! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:05:52'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:19:54'!
 push
 	
-	self outputOfGitCommand: 'push'! !
+	[ self outputOfGitCommand: 'push' ]
+		on: Error
+		do: [ :error | 
+			(error messageText withBlanksTrimmed beginsWith: 'To ')
+				ifTrue: [ ^ self ].
+			(error messageText withBlanksTrimmed = 'Everything up-to-date')
+				ifTrue: [ ^ self ].
+				self halt
+			]! !
 
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:13:28'!
 remoteAndLocalBranchesIncludingFile: aFilePath 
