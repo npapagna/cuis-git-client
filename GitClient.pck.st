@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:06:01 pm'!
-'Description List all branches + commit and push'!
-!provides: 'GitClient' 1 19!
+'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:07:39 pm'!
+'Description Push'!
+!provides: 'GitClient' 1 20!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -622,7 +622,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:02:20'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:07:29'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -633,9 +633,10 @@ systemCatListMenuSpec
 		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
 		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
 		#(3	'Commit and push...' 	nil 	model 	commitAndPushSelectedPackageInCurrentGitBranch 						packageIcon)
-		#(4 	'-----')
-		#(5	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
-		#(6 	'-----')
+		#(4	'Push' 	nil 	model 	pushSelectedPackageInCurrentGitBranch 						packageIcon)
+		#(5 	'-----')
+		#(6	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
+		#(7 	'-----')
 	)! !
 
 !GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
