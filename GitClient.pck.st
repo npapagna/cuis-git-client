@@ -1,6 +1,6 @@
-'From Cuis7.3 [latest update: #7102] on 25 April 2025 at 5:20:03 pm'!
-'Description push'!
-!provides: 'GitClient' 1 22!
+'From Cuis7.5 [latest update: #7279] on 25 June 2025 at 10:41:05 am'!
+'Description Compare with selected revision'!
+!provides: 'GitClient' 1 26!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -635,7 +635,7 @@ messageListMenuSpec
 		#(0		'Git history' 				nil 	model 			gitHistoryOfSelectedMethod 									packageIcon)
 	)! !
 
-!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 4/25/2025 17:07:29'!
+!GitClientMenus class methodsFor: 'as yet unclassified' stamp: 'NPM 6/25/2025 10:40:46'!
 systemCatListMenuSpec
 	"Spec for the menu and shortcut keys for the system categories list.
 	See coment at Morph >> #getMenu
@@ -643,13 +643,14 @@ systemCatListMenuSpec
 	^#(
 		#(0	'Git history' 	nil 	model 	gitHistoryOfSelectedPackage 						packageIcon)
 		#(1	'Compare with branch...' 	nil 	model 	compareSelectedPackageWithGitBranch 						packageIcon)
-		#(2	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
-		#(2	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
-		#(3	'Commit and push...' 	nil 	model 	commitAndPushSelectedPackageInCurrentGitBranch 						packageIcon)
-		#(4	'Push' 	nil 	model 	pushSelectedPackageInCurrentGitBranch 						packageIcon)
-		#(5 	'-----')
-		#(6	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
+		#(2	'Compare with revision...' 	nil 	model 	compareSelectedPackageWithGitRevision 						packageIcon)
+		#(3	'Merge branch...' 	nil 	model 	mergeSelectedPackageFromGitBranch 						packageIcon)
+		#(4	'Commit...' 	nil 	model 	commitSelectedPackageInCurrentGitBranch 						packageIcon)
+		#(5	'Commit and push...' 	nil 	model 	commitAndPushSelectedPackageInCurrentGitBranch 						packageIcon)
+		#(6	'Push' 	nil 	model 	pushSelectedPackageInCurrentGitBranch 						packageIcon)
 		#(7 	'-----')
+		#(8	'Switch to temporary branch and reinstall package...' 	nil 	model 	switchToTemporaryBranchAndReinstallSelectedPackage 						packageIcon)
+		#(9 	'-----')
 	)! !
 
 !GitHistoryModel methodsFor: 'as yet unclassified' stamp: 'NPM 3/7/2025 14:33:51'!
@@ -819,12 +820,6 @@ openCompiledMethod: aCompiledMethod
 		open: (GitHistoryModel fromCompiledMethod: aCompiledMethod)
 		label: 'Git log: ', aCompiledMethod classAndSelector! !
 
-!CompiledMethod methodsFor: '*GitClient' stamp: 'NPM 3/4/2025 10:08:07'!
-gitHistory
-	
-	^ self methodClass package gitHistory
-		historyOfCompiledMethod: self! !
-
 !Browser methodsFor: '*GitClient' stamp: 'NPM 4/25/2025 17:05:18'!
 commitAndPushSelectedPackageInCurrentGitBranch
 	
@@ -886,6 +881,29 @@ compareSelectedPackageWithGitBranch
 				"(CodeFileBrowser browseCodeSource: packageFile)
 					removeUnmodifiedClasses"
 			]
+	 ]! !
+
+!Browser methodsFor: '*GitClient' stamp: 'NPM 6/24/2025 18:37:43'!
+compareSelectedPackageWithGitRevision
+	
+	self selectedPackage
+		ifNil: [ ^ self inform: 'The package does not have a full file name' ]
+		ifNotNil: [ :codePackage | | gitClient commitId packageFileEntry |
+			
+			commitId := self request: 'Enter commit id' initialAnswer: '' orCancel: [ ^ self].
+			
+			gitClient := GitClient ofPackageAt: codePackage fullFileName.
+			
+			packageFileEntry := gitClient downloadFile: codePackage fullFileName fromBranch: commitId.
+		
+				ChangeListWindow allInstancesDo: [:x | x delete ].
+				ChangeList browsePackageContents: packageFileEntry.
+				ChangeListWindow allInstances first model
+					removeDoIts;
+					removeEmptyClassComments;
+					removeOlderMethodVersions;
+					removeUpToDate
+			
 	 ]! !
 
 !Browser methodsFor: '*GitClient' stamp: 'NPM 3/7/2025 14:23:59'!
@@ -999,6 +1017,12 @@ browseCodePackageFile: packageFile contents: stream
 	changeList clearSelections.
 	ChangeListWindow open: changeList label: packageFile packageName.
 	^ changeList! !
+
+!CompiledMethod methodsFor: '*GitClient' stamp: 'NPM 3/4/2025 10:08:07'!
+gitHistory
+	
+	^ self methodClass package gitHistory
+		historyOfCompiledMethod: self! !
 
 !CodePackage methodsFor: '*GitClient' stamp: 'NPM 3/8/2025 01:41:22'!
 codePackageFile
