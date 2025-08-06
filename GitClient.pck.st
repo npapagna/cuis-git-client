@@ -1,6 +1,6 @@
-'From Cuis7.5 [latest update: #7279] on 25 June 2025 at 10:41:05 am'!
+'From Cuis7.5 [latest update: #7398] on 6 August 2025 at 12:11:47 pm'!
 'Description Compare with selected revision'!
-!provides: 'GitClient' 1 26!
+!provides: 'GitClient' 1 27!
 !requires: 'CommandShell' 1 2 nil!
 !requires: 'OSProcess' 1 36 nil!
 SystemOrganization addCategory: #GitClient!
@@ -298,18 +298,23 @@ contentsOfFile: aFilePath onBranch: aBranchName
 		outputOfGitCommand:  'show ', aBranchName, ':.', fileName
 		! !
 
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 8/6/2025 12:10:23'!
+createTemporaryFile: anExtension 
+	
+	^ ((self outputOfCommand: 'mktemp'), '.', anExtension) asFileEntry! !
+
 !GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:30:22'!
 createTemporaryFolder
 	
 	^ (self outputOfCommand: 'mktemp -d') asDirectoryEntry! !
 
-!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 4/22/2025 09:40:58'!
+!GitClient methodsFor: 'as yet unclassified' stamp: 'NPM 8/6/2025 12:08:39'!
 downloadFile: aFilePath fromBranch: aBranchName 
 	
 	| fileContents packageFileEntry |
 
 	fileContents := self contentsOfFile: aFilePath onBranch: aBranchName.
-	packageFileEntry := aFilePath asFileEntry.
+	packageFileEntry := self createTemporaryFile: aFilePath asFileEntry extension.
 
 	packageFileEntry fileContents: fileContents.
 
